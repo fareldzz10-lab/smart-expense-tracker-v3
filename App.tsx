@@ -37,7 +37,9 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { generateUUID } from "./utils";
 import { auth } from "./services/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+
+// Cast motion.div to any to avoid strict type issues with framer-motion versions
+const MotionDiv = motion.div as any;
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -62,19 +64,33 @@ const App: React.FC = () => {
 
   // Initialize App & Listen to Auth
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    // Namespaced Auth listener
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         setIsAuthenticated(true);
 
-        // Try fetch user profile from DB, or create default
+        // Try fetch user profile from DB
         let storedUser = await getUser();
+        const googleName = firebaseUser.displayName;
+        const googleEmail = firebaseUser.email || "";
+
+        // If user doesn't exist in DB, create them
         if (!storedUser) {
           storedUser = {
-            name: firebaseUser.displayName || "User",
-            email: firebaseUser.email || "",
+            name: googleName || "Friend",
+            email: googleEmail,
           };
           await saveUser(storedUser);
         }
+        // If user exists but has a generic name ('User') and we have a better name from Google, update it
+        else if (
+          (storedUser.name === "User" || !storedUser.name) &&
+          googleName
+        ) {
+          storedUser.name = googleName;
+          await saveUser(storedUser);
+        }
+
         setUser(storedUser);
 
         // Load Theme
@@ -401,7 +417,7 @@ const App: React.FC = () => {
       user={user}
     >
       <AnimatePresence mode="wait">
-        <motion.div
+        <MotionDiv
           key={activeTab}
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -409,7 +425,7 @@ const App: React.FC = () => {
           transition={{ duration: 0.2 }}
         >
           {renderContent()}
-        </motion.div>
+        </MotionDiv>
       </AnimatePresence>
 
       <TransactionForm
