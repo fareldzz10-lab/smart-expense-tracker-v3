@@ -1,0 +1,7 @@
+{
+  "hosting": {
+    "site": "smartexpensetracker-1bad1-522c7",
+    "public": "public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  }
+}

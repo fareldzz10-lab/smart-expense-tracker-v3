@@ -1,0 +1,5 @@
+{
+  "name": "Smart Expense Tracker",
+  "description": "A smart, interactive financial tracking application featuring AI-powered transaction parsing and spending analysis, built with React, Tailwind CSS, and Framer Motion.",
+  "requestFramePermissions": []
+}
